@@ -5,9 +5,23 @@
 """A minimal library that extends cloudpathlib.CloudPath to the RBC dataset.
 """
 
-import urllib, mimetypes, json
+import os, urllib, mimetypes, json
 from pathlib import Path, PosixPath, PurePosixPath
+
 import cloudpathlib
+
+class RBCFileException(Exception):
+    """This exception is raised internally by the RBCClient object when one
+    attempts to load a file that is not part of the S3 storage. This happens
+    frequently because files like the `participants.tsv` equivalents are stored
+    directly in git rather than as git-annex objects. The git-annex objects
+    must be loaded from S3 while the non-annexed files are loaded directly from
+    git.
+    """
+    __slots__ = ('url', 'contents')
+    def __init__(self, url, contents=None):
+        self.url = url
+        self.contents = contents
 
 @cloudpathlib.client.register_client_class("rbc")
 class RBCClient(cloudpathlib.client.Client):
@@ -47,6 +61,8 @@ class RBCClient(cloudpathlib.client.Client):
         (repo, tail) = RBCClient._path_split_repo(path)
         ghpath = RBCClient._get_github_path(path)
         dat = RBCClient._url_slurp(ghpath)
+        if b'/.git/annex/objects/' not in dat:
+            raise RBCFileException(ghpath, dat)
         file = dat.decode('utf-8').split('/')[-1]
         return f"s3://fcp-indi/data/Projects/RBC/{repo}/{file}"
     def __init__(self,
@@ -75,11 +91,22 @@ class RBCClient(cloudpathlib.client.Client):
     def _download_file(self, cloud_path, local_path):
         if not isinstance(cloud_path, RBCPath):
             raise TypeError("cannot download path that is not an RBCPath")
-        s3path = self.to_s3(cloud_path)
-        return self._s3client._download_file(s3path, local_path)
+        try:
+            s3path = self.to_s3(cloud_path)
+        except RBCFileException as e:
+            local_path = Path(local_path)
+            with local_path.open('wb') as f:
+                f.write(e.contents)
+        else:
+            return self._s3client._download_file(s3path, local_path)
+            
     def _exists(self, cloud_path):
-        s3path = self.to_s3(cloud_path)
-        return self._s3client._exists(s3path)
+        try:
+            s3path = self.to_s3(cloud_path)
+        except RBCFileException as e:
+            return True
+        else:
+            return self._s3client._exists(s3path)
     def _list_dir(self, cloud_path, recursive=False):
         if recursive:
             raise NotImplementedError(
@@ -96,17 +123,22 @@ class RBCClient(cloudpathlib.client.Client):
             return "directory"
         else:
             return "file"
-    def _path_entry(self, cloud_path):
-        s3path = self.to_s3(cloud_path)
-        return self._s3client._path_entry(s3path)
     def _get_public_url(self, cloud_path):
-        s3path = self.to_s3(cloud_path)
-        return self._s3client._get_public_url(s3path)
+        try:
+            s3path = self.to_s3(cloud_path)
+        except RBCFileException as e:
+            return e.url
+        else:
+            return self._s3client._get_public_url(s3path)
     def _generate_presigned_url(self, cloud_path, expire_seconds=60*60):
-        s3path = self.to_s3(cloud_path)
-        return self._s3client._generate_presigned_url(
-            s3path,
-            expire_seconds=expire_seconds)
+        try:
+            s3path = self.to_s3(cloud_path)
+        except RBCFileException as e:
+            return e.url
+        else:
+            return self._s3client._generate_presigned_url(
+                s3path,
+                expire_seconds=expire_seconds)
 
 @cloudpathlib.cloudpath.register_path_class('rbc')
 class RBCPath(cloudpathlib.CloudPath):
@@ -119,6 +151,7 @@ class RBCPath(cloudpathlib.CloudPath):
                  local_cache_dir=None,
                  file_cache_mode=None):
         self._handle = None
+        self._stat = None
         self.client = RBCClient.get_default_client()
         if isinstance(cloud_path, RBCPath):
             if client is None:
@@ -138,11 +171,11 @@ class RBCPath(cloudpathlib.CloudPath):
     def s3path(self):
         return self.client.to_s3(self)
     @property
-    def bucket(self):
-        return self.s3path.bucket
-    @property
     def drive(self):
-        return self.s3path.drive
+        try:
+            return self.s3path.drive
+        except RBCFileException as e:
+            return None
     def is_dir(self):
         json = self.client._get_github_json(self)
         return isinstance(json, list)
@@ -154,17 +187,24 @@ class RBCPath(cloudpathlib.CloudPath):
     def touch(self, exist_ok: bool = True):
         raise TypeError(f"RBCPath operations are read-only")
     def stat(self):
-        return self.s3path.stat()
+        if self._stat is None:
+            try:
+                self._stat = self.s3path.stat()
+            except RBCFileException as e:
+                import time
+                self._stat = os.stat_result(
+                    (None, None, 'github://',
+                     None, None, None,
+                     len(e.contents),
+                     None, int(time.time()), None))
+        return self._stat
     def iterdir(self):
         return self.client._list_dir(self)
     @property
-    def project_id(self):
-        return self.s3path.project_id
-    @property
-    def _local(self):
-        return self.s3path._local
-    @property
     def key(self):
-        return self.s3path.key
+        try:
+            return self.s3path.key
+        except RBCFileException as e:
+            return None
 
 __all__ = ("RBCPath",)
