@@ -1,11 +1,18 @@
 [project]
-name = "rbclib"
+# If you use a library in the `src/` directory, make this the library's directory
+# name (i.e., if the name is 'projectlib' then there should be a file
+# `src/projectlib/__init__.py` in your repository.
+name = "projectlib"
 version = "0.1.0"
-description = """A library that extends cloudpathlib to the RBC dataset."""
-authors = [{name="Noah C. Benson", email="nben@uw.edu"}]
+# Make sure to edit the description and authors too!
+description = """A library for Week-1 Group Projects of NeuroHackademy 2025."""
+authors = [{name="Noah C. Benson", email="nben@uw.edu"},
+           {name="Ariel Rokem", email="arokem@uw.edu"}]
 license = {"text"="MIT"}
 readme = "README.md"
 requires-python = ">=3.8"
+# These can be optionally edited to specify what kind of library you have
+# written.
 keywords = ["cloud"]
 classifiers = [
     'Intended Audience :: Science/Research',
@@ -26,10 +33,15 @@ classifiers = [
     'Operating System :: POSIX',
     'Operating System :: Unix',
     'Operating System :: MacOS']
+# Any other libraries your library depends on should be listed here:
 dependencies = [
-     'cloudpathlib[s3,gs,azure] >= 0.18.0']
+     'cloudpathlib[s3,gs,azure] >= 0.18.0',
+     'scikit-learn',
+     'numpy',
+     'pandas']
 
-
+# Make sure to update this to match your GitHub account (you can use the
+# account of any group member).
 [project.urls]
-homepage = "https://github.com/NeuroHackademy2025/rbc-project-template"
-repository = "https://github.com/NeuroHackademy2025/rbc-project-template"
+homepage = "https://github.com/NeuroHackademy2025/week1-project-template"
+repository = "https://github.com/NeuroHackademy2025/week1-project-template"
