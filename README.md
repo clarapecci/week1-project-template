@@ -49,7 +49,7 @@ and is fairly easy to model in a short amount of time.
 The `p_factor` that you are tasked with modeling and predicting is a general
 psychopathology factor that has been calculated for each subject. The details
 of this calculation are not critical for this project, but more information can
-be found in [this RBC publication](https://doi.org/10.1101/2025.02.24.639850).
+be found in [this RBC publication](https://doi.org/10.1101/2025.02.24.639850  ).
 
 ### Can't we just get the `p_factor` from the dataset?
 
