@@ -5,9 +5,17 @@
 name = "projectlib"
 version = "0.1.0"
 # Make sure to edit the description and authors too!
-description = """A library for Week-1 Group Projects of NeuroHackademy 2025."""
-authors = [{name="Noah C. Benson", email="nben@uw.edu"},
-           {name="Ariel Rokem", email="arokem@uw.edu"}]
+description = """An analysis for Week-1 Group Projects of NeuroHackademy 2025."""
+authors = [{name="Carli Fine", email="c.fine@sussex.ac.uk"},
+           {name="Clara Pecci", email="cp661@cam.ac.uk"},
+           {name="Dan Zhou", email="danzhou@seas.upenn.edu"}, 
+           {name="Elizabeth Li", email="elizabeth.li.shuxuan@gmail.com"},
+           {name="Emina Ayyildiz", email="eminaayyildiz@gmail.com"}, 
+           {name="Giulia Vasirani", email="giulia.vasirani@edu.unige.it"}, 
+           {name="Ilia Ernston", email="ilya.ernston@gmail.com"}, 
+           {name="Iliana Sandoval", email="iliana.sandoval0973@alumnos.udg.mx"},
+           {name="Jake Chernicky", email="jakechernicky@gmail.com"},
+           {name="Svenja Seuffert", email="svenja.seuffert@staff.uni-marburg.de"}]
 license = {"text"="MIT"}
 readme = "README.md"
 requires-python = ">=3.8"
@@ -43,5 +51,5 @@ dependencies = [
 # Make sure to update this to match your GitHub account (you can use the
 # account of any group member).
 [project.urls]
-homepage = "https://github.com/NeuroHackademy2025/week1-project-template"
-repository = "https://github.com/NeuroHackademy2025/week1-project-template"
+homepage = "https://github.com/clarapecci/week1-project-template"
+repository = "https://github.com/clarapecci/week1-project-template"
